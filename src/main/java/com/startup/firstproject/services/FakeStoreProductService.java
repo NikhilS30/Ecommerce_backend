@@ -1,10 +1,12 @@
 package com.startup.firstproject.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.startup.firstproject.dtos.FakeStoreProductDto;
+import com.startup.firstproject.exceptions.ProductNotFoundException;
 import com.startup.firstproject.model.Category;
 import com.startup.firstproject.model.Product;
 
@@ -31,7 +33,7 @@ public class FakeStoreProductService implements ProductService {
 	}
 
 	@Override
-	public Product getSingleProducts(Long id) {
+	public Product getSingleProducts(Long id) throws ProductNotFoundException {
 		/*
 		 * now what this will do is it will call rest template and whatever response
 		 * comes it will do 1-1 mapping of this with format/dto what we want as defined
@@ -41,6 +43,9 @@ public class FakeStoreProductService implements ProductService {
 		FakeStoreProductDto fakeStoreProductDto = restTemplate.getForObject("https://fakestoreapi.com/products/" + id,
 				FakeStoreProductDto.class);
 		
+		if(fakeStoreProductDto==null) {
+			throw new ProductNotFoundException("product with this id is not found");
+		}
 		//returning nowconverted product
 		return convertFakeStoreProductToProduct(fakeStoreProductDto);
 
@@ -49,8 +54,16 @@ public class FakeStoreProductService implements ProductService {
 
 	@Override
 	public List<Product> getAllProducts() {
-		// TODO Auto-generated method stub
-		return null;
+		FakeStoreProductDto [] fakeStoreProductDtos = restTemplate.getForObject(
+				"https://fakestoreapi.com/products",
+				FakeStoreProductDto[].class);
+		
+		List <Product>products = new ArrayList<>();
+		for(FakeStoreProductDto fakeStoreProductDto:fakeStoreProductDtos) {
+			products.add(convertFakeStoreProductToProduct(fakeStoreProductDto));
+		}
+		
+		return products;
 	}
 	
 	private Product convertFakeStoreProductToProduct(FakeStoreProductDto fakeStoreProductDto) {
@@ -64,6 +77,12 @@ public class FakeStoreProductService implements ProductService {
 				category.setDesc(fakeStoreProductDto.getCategory());
 				product.setCategory(category);
 		return product;
+	}
+
+	@Override
+	public Product deleteProduct() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
